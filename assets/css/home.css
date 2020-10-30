@@ -1,0 +1,115 @@
+body {
+	margin:0 auto;
+	background-color: #fff;
+	font: 13px/20px normal Helvetica, Arial, sans-serif;
+	color: #4F5155;
+}
+.mainapp{
+	width: 100%; 
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	background-color: aliceblue;
+}
+.navbar{
+	display:flex;
+	flex-direction: row;
+	padding-left: 5rem;
+	padding-right: 5rem;
+	color: white;
+	background-color: black;
+}
+a{
+	text-decoration: none;
+	color: white;
+}
+.brand{
+	flex-grow: 3;
+}
+.brand1{
+	flex-grow: 1;
+}
+.welcome{
+	flex-grow: 4;
+	background-image: url("construct.jpeg");
+	min-height: 40vh;
+	color: white;
+	display:flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	border-bottom: 20px solid black;
+}
+body > div > div.welcome > h1:hover{
+	color: blue;
+}
+body > div > div.welcome > div > h1 > a:hover{
+	color:brown;
+}
+h2{
+	box-shadow: -20px 2px brown;
+}
+.services{
+	flex-grow: 2;
+	display:flex;
+	flex-direction: column;
+	padding-left: 5rem;
+	padding-right: 5rem;
+}
+.services1{
+	box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+	border-radius: 10%;
+	margin-right:2rem;
+}
+.h5A{
+	text-align: center;
+	border-bottom: 3px solid white;
+}
+.pA{
+	text-align: center;
+}
+.serv1{
+	display:flex;
+	flex-direction: column;
+	align-items: center;
+}
+.serv2{
+	display:flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+.contact{
+	flex-grow: 2;
+	display:flex;
+	flex-direction: column;
+	align-items: center;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+.contact1{
+	display:flex;
+	flex-direction:row;
+	align-items: center;
+}
+.contact2{
+	display:flex;
+	flex-direction:column;
+	margin-right: 5rem;
+}
+.footer{
+	flex-grow: 1;
+	display:flex;
+	color: wheat;
+	justify-content: space-around;
+}
+.jscssfooter{
+	color: white;
+	background-color: black;
+	transform: scaleY(1.2);
+	transition: 3s;
+}
+.jscssnavbar{
+	background-color: burlywood;
+	transform: scaleY(1.2);
+	transition: 3s;
+}
