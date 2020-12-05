@@ -18,6 +18,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 			style="width:100%;height: 100%;"/>
 		</div>
 		<div class = "sec-container" id ="trigger">
+			<?php if (isset($loginFailed)): ?>
+				<h2 style="color:red;"><?=$loginFailed?></h2>
+			<?php endif?>
 			<h2 style="color:brown;">Login Here!</h2>
 			<?php echo validation_errors(); ?>
 			<form method="post">
@@ -37,7 +40,10 @@ echo mdate($datestring, $time);
 ?>
 			</div>
 			<div><h1>
-				<?php echo anchor('products', 'VIEW ITEMS', 'title="LIST ITEMS Shitttttt!"'); ?></h1>
+				<?php
+$homelink = base_url('ezimba/welcome');?>
+				<a href="<?=$homelink?>">VIEW ALL PRODUCTS</a>
+				</h1>
 			</div>
 			<div style="color: purple;">
 				<?php echo $this->calendar->generate(2020, 8); ?>
