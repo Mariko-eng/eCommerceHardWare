@@ -1,4 +1,4 @@
-<div class="pdetail">
+ <div class="pdetail">
 	<div>
 <?php
 $aa = base_url();

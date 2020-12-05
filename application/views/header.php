@@ -61,7 +61,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 				<div class="brand-links2" style="display: flex; flex-direction: row;color:white;">
 					<h5 style="margin-right:2rem;">
 						<?php
-echo anchor('welcome', 'HOME'); ?>
+echo anchor('ezimba/welcome', 'HOME'); ?>
 					</h5>
 					<h5 style="margin-right:2rem;">
 						<?php

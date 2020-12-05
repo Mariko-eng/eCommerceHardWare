@@ -17,16 +17,58 @@ class Customer extends CI_Controller {
 		$this->load->model('User_Admin_Model', 'customer');
 	}
 
-	public function index() {
-		// GETTING ALL PRODUCTS
+	public function mylogin() {
+		if ($this->input->post('loginSubmit')) {
+			$user = $this->input->post('username');
+			$passwrd = $this->input->post('passwrd');
+			// echo $user;
+			// echo $passwrd;
+			$this->customer->setName($user);
+			$this->customer->setPass($passwrd);
+
+			$_user = $this->customer->getUser();
+			// echo var_dump($user);
+			if (!empty($_user)) {
+				$loginDetailSession = array('fname' => $_user['firstname'], 'lname' => $_user['lastname'],
+					'mail' => $_user['email'], 'telephone' => $_user['phone'],
+					'customerID' => $_user['customer_id']);
+				$this->session->set_userdata('userinfo', $loginDetailSession);
+				redirect('ezimba/welcome');
+			} else {
+				$data['loginFailed'] = 'Incorrect UserName And Password';
+				$this->load->view('login', $data);
+			}
+		} else {
+			$this->load->view('login');
+		}
+	}
+
+	public function mylogout() {
+		if ($this->session->has_userdata('userinfo')) {
+			$this->session->sess_destroy();
+			redirect('ezimba/welcome');
+		}
+	}
+
+	public function myindex() {
+		//New Home Page
+		$this->customer->setStatus(1);
+		$data['results'] = $this->customer->getSampleProductsForHome();
+
+		$this->load->view('customer_views/new', $data);
+
+	}
+
+	public function myproducts() {
+		//New All PRoducts Page
 		$data = array();
 		$data['title'] = 'Product | eZimba';
-		$config['base_url'] = base_url() . 'customer/index/';
+		$config['base_url'] = base_url() . 'customer/myproducts/';
 		$this->customer->setStatus(1);
 		$rows = $this->customer->getAllProductCount();
 		$config['total_rows'] = $rows;
 
-		$config['per_page'] = 2;
+		$config['per_page'] = 12;
 		$config['ur1_segment'] = 3;
 
 		if (empty($this->uri->segment(3))) {
@@ -41,53 +83,164 @@ class Customer extends CI_Controller {
 
 		$data['page_links'] = $this->pagination->create_links();
 		$data['results'] = $this->customer->getAllProducts();
-		// echo var_dump($data['results']);
-		$this->load->view('header');
-		$this->load->view('productlist', $data);
-		$this->load->view('footer');
+
+		$this->load->view('customer_views/new_products', $data);
 	}
 
-	public function home() {
-		if ($this->session->has_userdata('userinfo')) {
-			$data['loginDetails'] = $this->session->userdata('userinfo');
-			$this->load->view('home', $data);
+	public function myproduct($attr) {
+		//New Single PRoducts Page
+		$this->customer->setProductID($attr);
+		$__item = $this->customer->get_singleproduct();
+		$this->customer->setPDCategory($__item['category']);
+		$__4_items = $this->customer->getProductsForSingleProduct();
+		// echo var_dump($__4_items);
+		$data['item'] = $__item;
+		$data['items4'] = $__4_items;
+		$this->load->view('customer_views/myheader_myproduct');
+		$this->load->view('customer_views/commonheader');
+		$this->load->view('customer_views/mysingleproduct', $data);
+		$this->load->view('customer_views/myfooter_myproduct');
+	}
+
+	public function mycartitems() {
+		//New Cart Page
+		$this->load->view('customer_views/new_carts');
+	}
+
+	public function add_new_cart_item() {
+		//New Cart Page
+		$p = $this->input->post("pID");
+		$this->customer->setProductID($p);
+		$__item = $this->customer->get_singleproduct();
+		$item = $__item['name'];
+		$cartArray = array(
+			$item => array(
+				"Name" => $__item['name'],
+				"Price" => $__item['price'],
+				"Category" => $__item['category'],
+				"Image" => $__item['image'],
+				"ProductID" => $__item['product_id'],
+				"Quantity" => 1,
+				"sub_total" => 1 * $__item['price']),
+		);
+		$_cartData = $this->session->userdata('cart_data');
+		if (empty($_cartData)) {
+			$this->session->set_userdata('cart_data', $cartArray);
+			$this->session->set_userdata('cartstatus', "ADDED TO CART");
 		} else {
-			$this->load->view('home');
+			$arr_keys = array_keys($_cartData);
+			if (in_array($item, $arr_keys)) {
+				$this->session->set_userdata('cartstatus', "ADDED TO CART ALREADY!");
+			} else {
+				$this->session->set_userdata('cart_data', array_merge($_SESSION['cart_data'], $cartArray));
+				$this->session->set_userdata('cartstatus', "ADDED TO CART");
+			}
 		}
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(array('status' => $_SESSION['cartstatus'],
+				'no_of_cartItems' => count($_SESSION['cart_data']),
+			)));
 	}
 
-	public function login() {
-		if ($this->input->post('loginSubmit')) {
-			$user = $this->input->post('username');
-			$passwrd = $this->input->post('passwrd');
-			echo $user;
-			echo $passwrd;
-			$this->customer->setName($user);
-			$this->customer->setPass($passwrd);
+	public function update_cart_item_qty() {
+		$item = $this->input->post('PID');
+		$qty = $this->input->post('Qty');
 
-			$_user = $this->customer->getUser();
-			echo var_dump($user);
-			if (!empty($_user)) {
-				$loginDetailSession = array('fname' => $_user['firstname'], 'lname' => $_user['lastname'],
-					'mail' => $_user['email'], 'telephone' => $_user['phone'],
-					'customerID' => $_user['customer_id']);
-				$this->session->set_userdata('userinfo', $loginDetailSession);
-				redirect('products');
+		$this->customer->setProductID($item);
+		$__item = $this->customer->get_singleproduct();
+		$itempID = $__item['name'];
+
+		$cartArray = array(
+			$itempID => array(
+				"Name" => $__item['name'],
+				"Price" => $__item['price'],
+				"Category" => $__item['category'],
+				"Image" => $__item['image'],
+				"ProductID" => $__item['product_id'],
+				"Quantity" => $qty,
+				"sub_total" => $qty * $__item['price']),
+		);
+
+		$this->session->set_userdata('cart_data', array_merge($_SESSION['cart_data'], $cartArray));
+	}
+
+	public function remove_item_from_cart() {
+		$product = $this->input->post('prod');
+		unset($_SESSION['cart_data'][$product]);
+		$this->output
+			->set_content_type('application/json')
+			->set_output(json_encode(array('isdelete' => 'DELETED')));
+	}
+
+	public function myproductcheckout() {
+		//New PRoduct Checkout Page
+		if ($this->session->has_userdata('cart_data')) {
+			if (!empty($_SESSION['cart_data'])) {
+				if ($this->session->has_userdata('userinfo')) {
+					$cart = $_SESSION['cart_data'];
+					$total = 0;
+					foreach ($cart as $cart_item) {
+						$total = $total + $cart_item['sub_total'];
+					}
+					$data['full_total'] = $total;
+					$this->load->view('customer_views/new_checkout', $data);
+				} else {
+					return redirect('ezimba/login');
+				}
 			} else {
-				$data['loginDetailSession'] = array('error' => 'Incorrect UserName And Password');
-				$this->load->view('login', $data);
+				return redirect('ezimba/allproducts');
 			}
 		} else {
-			$this->load->view('login');
+			return redirect('ezimba/allproducts');
 		}
 	}
 
-	public function logout() {
-		if ($this->session->has_userdata('userinfo')) {
-			$this->session->sess_destroy();
-			echo "Just Logged out";
-			redirect('products');
+	public function place_order() {
+		$Ordered_items = $_SESSION["cart_data"];
+		$orderProductID = random_string('alnum', 32);
+		$this->customer->setOrderProductID($orderProductID);
+
+		foreach ($Ordered_items as $k) {
+			// Orders Product Data
+			$this->customer->setProductID($k['ProductID']);
+			$this->customer->setPDName($k['Name']);
+			$this->customer->setPPrice($k['Price']);
+			$this->customer->setPDCategory($k['Category']);
+			$this->customer->setPQuantity($k['Quantity']);
+
+			$this->customer->updateOPTable();
 		}
+		// Orders Data
+		$total_of_invoice = $this->input->post('full_total');
+		$paymentMethod = $this->input->post('radio_payment');
+		$checkout_city = $this->input->post('checkout_city');
+		$checkout_address = $this->input->post('checkout_address');
+		$checkout_company = $this->input->post('checkout_company');
+		$location = $checkout_city . " " . $checkout_address . " " . $checkout_company;
+
+		$datestring = 'Year: %Y Month: %m Day: %d - %h:%i %a';
+		$time = time();
+		$dateTime = mdate($datestring, $time);
+		$orderDate = (string) $dateTime;
+
+		$iNo = random_string('alnum', 16);
+		$this->customer->setInvoiceNo($iNo);
+		$this->customer->setCustomerID($_SESSION['userinfo']['customerID']);
+		$this->customer->setFirstName($_SESSION['userinfo']['fname']);
+		$this->customer->setLastName($_SESSION['userinfo']['lname']);
+		$this->customer->setEmail($_SESSION['userinfo']['mail']);
+		$this->customer->setPhone($_SESSION['userinfo']['telephone']);
+		$this->customer->setPaymentAddr($location);
+		$this->customer->setPaymentMthd($paymentMethod);
+		$this->customer->setTotalOrder($total_of_invoice);
+		$this->customer->setDateAdded($orderDate);
+
+		$this->customer->updateOrdersTable();
+
+		unset($_SESSION['cart_data']);
+
+		$this->load->view('customer_views/new_order_succeed');
 	}
 
 	public function ajax_request() {
@@ -108,143 +261,4 @@ class Customer extends CI_Controller {
 			echo "</ul>";
 		}
 	}
-
-	public function singleproduct($attr) {
-		$this->customer->setProductID($attr);
-		$__item = $this->customer->get_singleproduct();
-		$data['item'] = $__item;
-		$this->load->view('header');
-		$this->load->view('productdetail', $data);
-		$this->load->view('footer');
-
-	}
-
-	public function add_cart_item() {
-		$pID = $this->input->post('p_id');
-		$this->customer->setProductID($pID);
-		$__item = $this->customer->get_singleproduct();
-		$item = $__item['name'];
-
-		$cartArray = array(
-			$item => array(
-				"Name" => $__item['name'],
-				"Price" => $__item['price'],
-				"Category" => $__item['category'],
-				"Image" => $__item['image'],
-				"ProductID" => $__item['product_id'],
-				"Quantity" => 1),
-		);
-
-		$_cartData = $this->session->userdata('cart_data');
-		if (empty($_cartData)) {
-			$this->session->set_userdata('cart_data', $cartArray);
-			$this->session->set_userdata('cartstatus', "Product Is Added");
-			redirect('products');
-		} else {
-			$arr_keys = array_keys($_cartData);
-			if (in_array($item, $arr_keys)) {
-				$this->session->set_userdata('cartstatus', "Product Already Exists");
-				redirect('products');
-			} else {
-				$this->session->set_userdata('cart_data', array_merge($_SESSION['cart_data'], $cartArray));
-				$this->session->set_userdata('cartstatus', "Product Cart Is Updated");
-				redirect('products');
-			}
-		}
-
-	}
-
-	public function update_cart_item() {
-		$item = $this->input->post('pID');
-		$qty = $this->input->post('qty');
-
-		$this->customer->setProductID($item);
-		$__item = $this->customer->get_singleproduct();
-		$itempID = $__item['name'];
-
-		$cartArray = array(
-			$itempID => array(
-				"Name" => $__item['name'],
-				"Price" => $__item['price'],
-				"Category" => $__item['category'],
-				"Image" => $__item['image'],
-				"ProductID" => $__item['product_id'],
-				"Quantity" => $qty),
-		);
-
-		$this->session->set_userdata('cart_data', array_merge($_SESSION['cart_data'], $cartArray));
-		echo "<pre>";
-		echo var_dump($_SESSION['cart_data']);
-		echo "</pre>";
-		$this->load->view('header');
-		$this->load->view('productcart');
-		$this->load->view('footer');
-	}
-
-	public function remove_cart_item($attr_index) {
-		unset($_SESSION['cart_data'][$attr_index]);
-		redirect('displaycartitems');
-	}
-
-	public function display_cart() {
-		$this->load->view('header');
-		$this->load->view('productcart');
-		$this->load->view('footer');
-	}
-
-	public function checkout() {
-		echo "SUBMISSION";
-	}
-
-	public function make_order() {
-		$data['totalInvoice'] = $this->input->post('totalInvoice');
-		$this->load->view('header');
-		$this->load->view('markorder', $data);
-		$this->load->view('footer');
-	}
-
-	public function confirmation_order() {
-		$Ordered_items = $_SESSION["cart_data"];
-		$orderProductID = random_string('alnum', 32);
-		$this->customer->setOrderProductID($orderProductID);
-
-		foreach ($Ordered_items as $k) {
-			// Orders Product Data
-			$this->customer->setProductID($k['ProductID']);
-			$this->customer->setPDName($k['Name']);
-			$this->customer->setPDCategory($k['Category']);
-			$this->customer->setPPrice($k['Price']);
-			$this->customer->setPQuantity($k['Quantity']);
-
-			$this->customer->updateOPTable();
-		}
-		// Orders Data
-		$totalInvoice = $this->input->post('totalInvoice');
-		$paymentMethod = $this->input->post('paymentMethod');
-		$location_district = $this->input->post('location_district');
-		$location_town = $this->input->post('location_town');
-		$location_village = $this->input->post('location_village');
-		$location = $location_district . $location_town . $location_village;
-		$datestring = 'Year: %Y Month: %m Day: %d - %h:%i %a';
-		$time = time();
-		$dateTime = mdate($datestring, $time);
-		$orderDate = (string) $dateTime;
-
-		$iNo = random_string('alnum', 16);
-		$this->customer->setInvoiceNo($iNo);
-		$this->customer->setCustomerID($_SESSION['userinfo']['customerID']);
-		$this->customer->setFirstName($_SESSION['userinfo']['fname']);
-		$this->customer->setLastName($_SESSION['userinfo']['lname']);
-		$this->customer->setEmail($_SESSION['userinfo']['mail']);
-		$this->customer->setPhone($_SESSION['userinfo']['telephone']);
-		$this->customer->setPaymentAddr($location);
-		$this->customer->setPaymentMthd($paymentMethod);
-		$this->customer->setTotalOrder($totalInvoice);
-		$this->customer->setDateAdded($orderDate);
-
-		$this->customer->updateOrdersTable();
-
-		$this->load->view('header');
-		$this->load->view('orderSuccess');
-		$this->load->view('footer');}
 }

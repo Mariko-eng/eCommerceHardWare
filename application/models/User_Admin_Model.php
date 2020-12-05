@@ -89,6 +89,9 @@ class User_Admin_Model extends CI_Model {
 	public function setOffset($offset) {
 		$this->_offset = $offset;
 	}
+	public function setPDCategory($attr) {
+		$this->_pd_category = $attr;
+	}
 
 	public function getUser() {
 		$query = $this->db->where('firstname', $this->_name)
@@ -108,6 +111,17 @@ class User_Admin_Model extends CI_Model {
 		return $query->num_rows();
 
 	}
+	public function getSampleProductsForHome() {
+		$query = $this->db->select(array('pd.name', 'pd.category', 'p.image', 'p.product_id', 'p.SKU', 'p.price'))
+			->from('products as p')
+			->join('product_desc as pd', 'p.product_id = pd.product_id', 'inner')
+		// ->where('p.status', $this->_status)
+		//	->where('p.status >=', 0)
+			->limit(8)
+			->get();
+		return $query->result_object();
+	}
+
 	public function getAllProducts() {
 		$query = $this->db->select(array('pd.name', 'pd.category', 'p.image', 'p.product_id', 'p.SKU', 'p.price'))
 			->from('products as p')
@@ -115,6 +129,15 @@ class User_Admin_Model extends CI_Model {
 		// ->where('p.status', $this->_status)
 		//	->where('p.status >=', 0)
 			->limit($this->_pageNumber, $this->_offset)
+			->get();
+		return $query->result_object();
+	}
+
+	public function getProductsForSingleProduct() {
+		$query = $this->db->select(array('pd.name', 'pd.category', 'p.image', 'p.product_id', 'p.SKU', 'p.price'))
+			->from('products as p')
+			->join('product_desc as pd', 'p.product_id = pd.product_id', 'inner')
+			->where('pd.category', $this->_pd_category)
 			->get();
 		return $query->result_object();
 	}
@@ -167,10 +190,6 @@ class User_Admin_Model extends CI_Model {
 
 	public function setPDName($attr) {
 		$this->_pd_name = $attr;
-	}
-
-	public function setPDCategory($attr) {
-		$this->_pd_category = $attr;
 	}
 
 	public function setPDDescription($attr) {
@@ -292,7 +311,7 @@ class User_Admin_Model extends CI_Model {
 			'price' => $this->_p_price,
 			'category' => $this->_pd_category,
 			'quantity' => $this->_p_quantity,
-			'orders_product_id' => $this->__order_productID,
+			// 'orders_product_id' => $this->__order_productID,
 		);
 
 		$this->db->insert('ordersProduct', $data_OProduct);

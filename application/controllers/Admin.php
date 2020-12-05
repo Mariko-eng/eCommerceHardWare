@@ -36,11 +36,11 @@ class Admin extends CI_Controller {
 				$data['title'] = 'Product | eZimba';
 				$config['base_url'] = base_url() . 'admin/index/';
 				$rows = $this->admin->getAllProductCountAdmin();
-				echo $rows;
-				echo "<br/>";
+				// echo $rows;
+				// echo "<br/>";
 				$config['total_rows'] = $rows;
 
-				$config['per_page'] = 2;
+				$config['per_page'] = 12;
 				$config['ur1_segment'] = 3;
 
 				if (empty($this->uri->segment(3))) {
@@ -55,14 +55,14 @@ class Admin extends CI_Controller {
 
 				$data['page_links'] = $this->pagination->create_links();
 				$data['results'] = $this->admin->getAllProductsAdmin();
-				echo var_dump($data['results']);
+				// echo var_dump($data['results']);
 
 				$this->load->view('header');
 				$this->load->view('productlist', $data);
 				$this->load->view('footer');
 			} else {
 				$data['adminloginDetails'] = array('error' => 'Incorrect UserName And Password');
-				echo var_dump($data['adminloginDetails']);
+				// echo var_dump($data['adminloginDetails']);
 				$this->load->view('adminlogin', $data);
 			}
 		} else {
@@ -71,7 +71,7 @@ class Admin extends CI_Controller {
 				$rows = $this->admin->getAllProductCountAdmin();
 				$config['total_rows'] = $rows;
 
-				$config['per_page'] = 2;
+				$config['per_page'] = 12;
 				$config['ur1_segment'] = 3;
 
 				if (empty($this->uri->segment(3))) {
@@ -102,6 +102,36 @@ class Admin extends CI_Controller {
 			redirect('adminlogin');
 		}
 
+	}
+
+	public function allproducts() {
+		// GETTING ALL PRODUCTS
+		$data = array();
+		$data['title'] = 'Product | eZimba';
+		$config['base_url'] = base_url() . 'admin/allproducts/';
+		$this->admin->setStatus(1);
+		$rows = $this->admin->getAllProductCount();
+		$config['total_rows'] = $rows;
+
+		$config['per_page'] = 12;
+		$config['ur1_segment'] = 3;
+
+		if (empty($this->uri->segment(3))) {
+			$page_number = 0;
+		} else {
+			$page_number = $this->uri->segment(3);
+		}
+		$offset = ($page_number - 1) * $this->pagination->per_page;
+		$this->admin->setPageNumber($config['per_page']);
+		$this->admin->setOffset($page_number);
+		$this->pagination->initialize($config);
+
+		$data['page_links'] = $this->pagination->create_links();
+		$data['results'] = $this->admin->getAllProducts();
+
+		$this->load->view('header');
+		$this->load->view('productlist', $data);
+		$this->load->view('footer');
 	}
 
 	public function newproduct() {

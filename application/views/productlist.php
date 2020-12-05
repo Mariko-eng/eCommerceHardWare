@@ -20,7 +20,7 @@
 	</div>
 	<div class="plist">
 		<div class="plist1">
-			<?php
+<?php
 foreach ($results as $k) {
 	$aa = base_url();
 	$bb = 'uploads/';
